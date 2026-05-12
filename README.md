@@ -27,7 +27,7 @@ Okteto admin users are skipped by default to prevent accidental self-lockout.
 
 | Name | Example | Description |
 |------|---------|-------------|
-| `GITHUB_ORG` | `my-company` | GitHub organization name |
+| `GH_ORG` | `my-company` | GitHub organization name |
 | `OKTETO_URL` | `https://okteto.example.com` | Base URL of your Okteto instance |
 
 Go to **Settings → Secrets and variables → Actions** to add them.
@@ -50,7 +50,7 @@ docker build -t offboard .
 # Dry run (no deletions)
 docker run --rm \
   -e GH_TOKEN=ghp_... \
-  -e GITHUB_ORG=my-company \
+  -e GH_ORG=my-company \
   -e OKTETO_TOKEN=... \
   -e OKTETO_URL=https://okteto.example.com \
   -e DRY_RUN=true \
@@ -59,7 +59,7 @@ docker run --rm \
 # Live run
 docker run --rm \
   -e GH_TOKEN=ghp_... \
-  -e GITHUB_ORG=my-company \
+  -e GH_ORG=my-company \
   -e OKTETO_TOKEN=... \
   -e OKTETO_URL=https://okteto.example.com \
   offboard
@@ -70,7 +70,7 @@ docker run --rm \
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GH_TOKEN` | Yes | GitHub PAT with `read:org` scope |
-| `GITHUB_ORG` | Yes | GitHub organization name |
+| `GH_ORG` | Yes | GitHub organization name |
 | `OKTETO_TOKEN` | Yes | Okteto admin API token |
 | `OKTETO_URL` | Yes | Okteto instance base URL |
 | `DRY_RUN` | No | Set to `true` to log removals without deleting |

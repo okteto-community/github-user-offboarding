@@ -31,7 +31,7 @@ type oktetoUser struct {
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.LUTC)
 
-	env, err := requireEnvs("GH_TOKEN", "GITHUB_ORG", "OKTETO_TOKEN", "OKTETO_URL")
+	env, err := requireEnvs("GH_TOKEN", "GH_ORG", "OKTETO_TOKEN", "OKTETO_URL")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,8 +39,8 @@ func main() {
 	dryRun := os.Getenv("DRY_RUN") == "true"
 	includeAdmins := os.Getenv("INCLUDE_ADMINS") == "true"
 
-	log.Printf("fetching GitHub org members for %s", env["GITHUB_ORG"])
-	members, err := getGitHubOrgMembers(env["GITHUB_ORG"], env["GH_TOKEN"])
+	log.Printf("fetching GitHub org members for %s", env["GH_ORG"])
+	members, err := getGitHubOrgMembers(env["GH_ORG"], env["GH_TOKEN"])
 	if err != nil {
 		log.Fatalf("failed to fetch GitHub org members: %v", err)
 	}

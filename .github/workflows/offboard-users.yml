@@ -30,7 +30,7 @@ jobs:
       - name: Run offboarding
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITHUB_ORG: ${{ vars.GITHUB_ORG }}
+          GH_ORG: ${{ vars.GH_ORG }}
           OKTETO_TOKEN: ${{ secrets.OKTETO_TOKEN }}
           OKTETO_URL: ${{ vars.OKTETO_URL }}
         run: |
@@ -40,7 +40,7 @@ jobs:
           fi
           docker run --rm \
             -e GH_TOKEN \
-            -e GITHUB_ORG \
+            -e GH_ORG \
             -e OKTETO_TOKEN \
             -e OKTETO_URL \
             $DRY_RUN_FLAG \
