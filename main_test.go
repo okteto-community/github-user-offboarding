@@ -71,8 +71,8 @@ func TestParseLinkNext(t *testing.T) {
 
 func TestUsersToRemove(t *testing.T) {
 	members := map[string]struct{}{
-		"101": {},
-		"102": {},
+		"alice": {},
+		"bob":   {},
 	}
 
 	tests := []struct {
@@ -84,27 +84,27 @@ func TestUsersToRemove(t *testing.T) {
 		{
 			name: "removes user not in org",
 			users: []oktetoUser{
-				{ID: "u1", ExternalID: "101", Name: "alice", Role: "Developer"},
-				{ID: "u2", ExternalID: "999", Name: "bob", Role: "Developer"},
+				{ID: "u1", ExternalID: "alice", Name: "alice", Role: "Developer"},
+				{ID: "u2", ExternalID: "charlie", Name: "charlie", Role: "Developer"},
 			},
-			wantNames: []string{"bob"},
+			wantNames: []string{"charlie"},
 		},
 		{
 			name: "skips admin by default",
 			users: []oktetoUser{
-				{ID: "u1", ExternalID: "999", Name: "alice", Role: "Admin"},
-				{ID: "u2", ExternalID: "888", Name: "bob", Role: "Developer"},
+				{ID: "u1", ExternalID: "charlie", Name: "charlie", Role: "Admin"},
+				{ID: "u2", ExternalID: "dave", Name: "dave", Role: "Developer"},
 			},
 			includeAdmins: false,
-			wantNames:     []string{"bob"},
+			wantNames:     []string{"dave"},
 		},
 		{
 			name: "includes admin when flag set",
 			users: []oktetoUser{
-				{ID: "u1", ExternalID: "999", Name: "alice", Role: "Admin"},
+				{ID: "u1", ExternalID: "charlie", Name: "charlie", Role: "Admin"},
 			},
 			includeAdmins: true,
-			wantNames:     []string{"alice"},
+			wantNames:     []string{"charlie"},
 		},
 		{
 			name: "skips user with no externalId",
@@ -116,8 +116,15 @@ func TestUsersToRemove(t *testing.T) {
 		{
 			name: "nothing to remove",
 			users: []oktetoUser{
-				{ID: "u1", ExternalID: "101", Name: "alice", Role: "Developer"},
-				{ID: "u2", ExternalID: "102", Name: "bob", Role: "Developer"},
+				{ID: "u1", ExternalID: "alice", Name: "alice", Role: "Developer"},
+				{ID: "u2", ExternalID: "bob", Name: "bob", Role: "Developer"},
+			},
+			wantNames: nil,
+		},
+		{
+			name: "case-insensitive match",
+			users: []oktetoUser{
+				{ID: "u1", ExternalID: "Alice", Name: "Alice", Role: "Developer"},
 			},
 			wantNames: nil,
 		},
@@ -139,8 +146,8 @@ func TestUsersToRemove(t *testing.T) {
 }
 
 func TestGetGitHubOrgMembers(t *testing.T) {
-	page1 := []githubMember{{Login: "alice", ID: 101}, {Login: "bob", ID: 102}}
-	page2 := []githubMember{{Login: "charlie", ID: 103}}
+	page1 := []githubMember{{Login: "alice"}, {Login: "bob"}}
+	page2 := []githubMember{{Login: "charlie"}}
 
 	var srv *httptest.Server
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +169,7 @@ func TestGetGitHubOrgMembers(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	want := map[string]struct{}{"101": {}, "102": {}, "103": {}}
+	want := map[string]struct{}{"alice": {}, "bob": {}, "charlie": {}}
 	if len(members) != len(want) {
 		t.Fatalf("got %d members, want %d", len(members), len(want))
 	}
@@ -187,8 +194,8 @@ func TestGetGitHubOrgMembersError(t *testing.T) {
 
 func TestGetOktetoUsers(t *testing.T) {
 	want := []oktetoUser{
-		{ID: "u1", ExternalID: "101", Name: "alice", Email: "alice@example.com", Role: "Developer"},
-		{ID: "u2", ExternalID: "102", Name: "bob", Email: "bob@example.com", Role: "Admin"},
+		{ID: "u1", ExternalID: "alice", Name: "alice", Email: "alice@example.com", Role: "Developer"},
+		{ID: "u2", ExternalID: "bob", Name: "bob", Email: "bob@example.com", Role: "Admin"},
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

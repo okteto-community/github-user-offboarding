@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -19,7 +18,6 @@ var httpClient = &http.Client{Timeout: 30 * time.Second}
 
 type githubMember struct {
 	Login string `json:"login"`
-	ID    int64  `json:"id"`
 }
 
 type oktetoUser struct {
@@ -101,7 +99,7 @@ func usersToRemove(users []oktetoUser, members map[string]struct{}, includeAdmin
 		if u.ExternalID == "" {
 			continue
 		}
-		if _, ok := members[u.ExternalID]; !ok {
+		if _, ok := members[strings.ToLower(u.ExternalID)]; !ok {
 			result = append(result, u)
 		}
 	}
@@ -154,7 +152,7 @@ func getGitHubOrgMembers(org, token, baseURL string) (map[string]struct{}, error
 			return nil, fmt.Errorf("parsing GitHub response: %w", err)
 		}
 		for _, m := range page {
-			members[strconv.FormatInt(m.ID, 10)] = struct{}{}
+			members[strings.ToLower(m.Login)] = struct{}{}
 		}
 		nextURL = parseLinkNext(resp.Header.Get("Link"))
 	}
