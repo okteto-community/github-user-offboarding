@@ -67,11 +67,11 @@ docker run --rm \
 
 ## Environment variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GH_TOKEN` | Yes | GitHub PAT with `read:org` scope |
-| `GH_ORG` | Yes | GitHub organization name |
-| `OKTETO_TOKEN` | Yes | Okteto admin API token |
-| `OKTETO_URL` | Yes | Okteto instance base URL |
-| `DRY_RUN` | No | Set to `true` to log removals without deleting |
-| `INCLUDE_ADMINS` | No | Set to `true` to also process Okteto admin users |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GH_TOKEN` | Yes | — | GitHub PAT with `read:org` scope |
+| `GH_ORG` | Yes | — | GitHub organization name |
+| `OKTETO_TOKEN` | Yes | — | Okteto admin API token |
+| `OKTETO_URL` | Yes | — | Okteto instance base URL |
+| `DRY_RUN` | No | `false` | Set to `true` to log removals without deleting |
+| `INCLUDE_ADMINS` | No | `false` | Set to `true` to also process Okteto admin users |
