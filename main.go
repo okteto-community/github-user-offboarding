@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,14 +19,16 @@ var httpClient = &http.Client{Timeout: 30 * time.Second}
 
 type githubMember struct {
 	Login string `json:"login"`
+	ID    int64  `json:"id"`
 }
 
 type oktetoUser struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
-	LastSeen string `json:"lastSeen"`
+	ID         string `json:"id"`
+	ExternalID string `json:"externalId"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Role       string `json:"role"`
+	LastSeen   string `json:"lastSeen"`
 }
 
 func main() {
@@ -40,7 +43,7 @@ func main() {
 	includeAdmins := os.Getenv("INCLUDE_ADMINS") == "true"
 
 	log.Printf("fetching GitHub org members for %s", env["GH_ORG"])
-	members, err := getGitHubOrgMembers(env["GH_ORG"], env["GH_TOKEN"])
+	members, err := getGitHubOrgMembers(env["GH_ORG"], env["GH_TOKEN"], "https://api.github.com")
 	if err != nil {
 		log.Fatalf("failed to fetch GitHub org members: %v", err)
 	}
@@ -53,15 +56,7 @@ func main() {
 	}
 	log.Printf("found %d Okteto users", len(users))
 
-	var toRemove []oktetoUser
-	for _, u := range users {
-		if !includeAdmins && u.Role == "Admin" {
-			continue
-		}
-		if _, ok := members[strings.ToLower(u.Name)]; !ok {
-			toRemove = append(toRemove, u)
-		}
-	}
+	toRemove := usersToRemove(users, members, includeAdmins)
 
 	if len(toRemove) == 0 {
 		log.Println("all Okteto users are active GitHub org members — nothing to do")
@@ -95,6 +90,24 @@ func main() {
 	}
 }
 
+// usersToRemove returns Okteto users whose GitHub ID (externalId) is not in
+// the members set. Users without an externalId are skipped.
+func usersToRemove(users []oktetoUser, members map[string]struct{}, includeAdmins bool) []oktetoUser {
+	var result []oktetoUser
+	for _, u := range users {
+		if !includeAdmins && u.Role == "Admin" {
+			continue
+		}
+		if u.ExternalID == "" {
+			continue
+		}
+		if _, ok := members[u.ExternalID]; !ok {
+			result = append(result, u)
+		}
+	}
+	return result
+}
+
 func requireEnvs(names ...string) (map[string]string, error) {
 	result := make(map[string]string, len(names))
 	var missing []string
@@ -111,9 +124,11 @@ func requireEnvs(names ...string) (map[string]string, error) {
 	return result, nil
 }
 
-func getGitHubOrgMembers(org, token string) (map[string]struct{}, error) {
+// getGitHubOrgMembers returns a set of GitHub user IDs (as strings) for all
+// members of the org. baseURL is configurable to allow testing.
+func getGitHubOrgMembers(org, token, baseURL string) (map[string]struct{}, error) {
 	members := make(map[string]struct{})
-	nextURL := fmt.Sprintf("https://api.github.com/orgs/%s/members?per_page=100", org)
+	nextURL := fmt.Sprintf("%s/orgs/%s/members?per_page=100", baseURL, org)
 	for nextURL != "" {
 		req, err := http.NewRequest(http.MethodGet, nextURL, nil)
 		if err != nil {
@@ -139,7 +154,7 @@ func getGitHubOrgMembers(org, token string) (map[string]struct{}, error) {
 			return nil, fmt.Errorf("parsing GitHub response: %w", err)
 		}
 		for _, m := range page {
-			members[strings.ToLower(m.Login)] = struct{}{}
+			members[strconv.FormatInt(m.ID, 10)] = struct{}{}
 		}
 		nextURL = parseLinkNext(resp.Header.Get("Link"))
 	}
